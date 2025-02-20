@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة إدارة الملفات</title>
+    <style>
+        :root {
+            --primary-color: #FFD700;
+            --background-dark: #212121;
+            --background-light: #333;
+            --text-light: #f1f1f1;
+            --danger-color: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: #1c1c1c;
+            color: var(--primary-color);
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .main-container {
+            flex: 1;
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem auto;
+            position: relative;
+        }
+
+        .auth-container {
+            display: grid;
+            place-items: center;
+            min-height: 70vh;
+        }
+
+        .form-box {
+            background-color: var(--background-light);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-box h2 {
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background-color: #424242;
+            color: var(--text-light);
+            transition: border-color 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: bold;
+        }
+
+        .button-primary {
+            background-color: var(--primary-color);
+            color: var(--background-dark);
+        }
+
+        .button-primary:hover {
+            filter: brightness(0.9);
+        }
+
+        .button-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .file-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .file-card {
+            background-color: var(--background-light);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .file-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .file-actions {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            filter: brightness(0.8);
+        }
+
+        .upload-section {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--background-light);
+            padding: 1rem;
+            border-radius: 8px;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background-color: #555;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
+            color: white;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .notification.success { background-color: #4CAF50; }
+        .notification.error { background-color: var(--danger-color); }
+        .notification.info { background-color: #2196F3; }
+
+        .user-menu {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>منصة إدارة الملفات</h1>
+    </header>
+
+    <main class="main-container">
+        <div class="notification"></div>
+
+        <!-- واجهة المصادقة -->
+        <div class="auth-container" id="authSection">
+            <div class="form-box" id="loginForm">
+                <h2>تسجيل الدخول</h2>
+                <div class="input-group">
+                    <input type="text" class="input-field" placeholder="اسم المستخدم" id="username">
+                </div>
+                <div class="input-group">
+                    <input type="password" class="input-field" placeholder="كلمة المرور" id="password">
+                </div>
+                <button class="button button-primary" id="loginBtn">تسجيل الدخول</button>
+                <p class="auth-switch">ليس لديك حساب؟ <a href="#" id="showSignup">إنشاء حساب</a></p>
+            </div>
+
+            <div class="form-box" id="signupForm" style="display: none;">
+                <h2>إنشاء حساب</h2>
+                <div class="input-group">
+                    <input type="text" class="input-field" placeholder="اسم المستخدم" id="signupUsername">
+                </div>
+                <div class="input-group">
+                    <input type="email" class="input-field" placeholder="البريد الإلكتروني" id="signupEmail">
+                </div>
+                <div class="input-group">
+                    <input type="password" class="input-field" placeholder="كلمة المرور" id="signupPassword">
+                </div>
+                <button class="button button-primary" id="signupBtn">إنشاء حساب</button>
+                <p class="auth-switch">هل لديك حساب؟ <a href="#" id="showLogin">تسجيل الدخول</a></p>
+            </div>
+        </div>
+
+        <!-- واجهة الملفات -->
+        <div id="fileSection" style="display: none;">
+            <div class="user-menu">
+                <span id="welcomeMessage"></span>
+                <button class="button button-danger" id="logoutBtn">خروج</button>
+            </div>
+
+            <div class="file-grid" id="fileGrid"></div>
+
+            <div class="upload-section">
+                <input type="file" id="fileInput" hidden>
+                <button class="button button-primary" id="chooseFileBtn">اختر ملف</button>
+                <button class="button button-primary" id="uploadBtn">رفع الملف</button>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+// نموذج التطبيق
+const App = {
+    currentUser: null,
+    
+    init() {
+        this.bindEvents();
+        this.checkAuth();
+    },
+
+    bindEvents() {
+        // أحداث المصادقة
+        document.getElementById('showSignup').addEventListener('click', this.showSignup);
+        document.getElementById('showLogin').addEventListener('click', this.showLogin);
+        document.getElementById('loginBtn').addEventListener('click', this.login);
+        document.getElementById('signupBtn').addEventListener('click', this.signup);
+        document.getElementById('logoutBtn').addEventListener('click', this.logout);
+
+        // أحداث الملفات
+        document.getElementById('chooseFileBtn').addEventListener('click', () => {
+            document.getElementById('fileInput').click();
+        });
+        document.getElementById('uploadBtn').addEventListener('click', this.uploadFile);
+    },
+
+    showNotification(message, type = 'info') {
+        const notification = document.querySelector('.notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    },
+
+    // وظائف المصادقة
+    async login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        if (!username || !password) {
+            this.showNotification('يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+
+        // محاكاة طلب API
+        setTimeout(() => {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                this.currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                this.showFileSection();
+                this.showNotification(`مرحبًا ${user.username}!`, 'success');
+            } else {
+                this.showNotification('بيانات الدخول غير صحيحة', 'error');
+            }
+        }, 500);
+    },
+
+    async signup() {
+        const username = document.getElementById('signupUsername').value;
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+
+        if (!username || !email || !password) {
+            this.showNotification('يرجى ملء جميع الحقول', 'error');
+            return;
+        }
+
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+        if (users.some(u => u.username === username)) {
+            this.showNotification('اسم المستخدم موجود مسبقًا', 'error');
+            return;
+        }
+
+        const newUser = { username, email, password, files: [] };
+        users.push(newUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        this.showNotification('تم إنشاء الحساب بنجاح!', 'success');
+        this.showLogin();
+    },
+
+    logout() {
+        localStorage.removeItem('currentUser');
+        this.currentUser = null;
+        document.getElementById('fileSection').style.display = 'none';
+        document.getElementById('authSection').style.display = 'block';
+    },
+
+    // وظائف الملفات
+    async uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        if (!fileInput.files.length) {
+            this.showNotification('يرجى اختيار ملف', 'error');
+            return;
+        }
+
+        const file = fileInput.files[0];
+        this.showUploadProgress(true);
+
+        // محاكاة رفع الملف
+        setTimeout(() => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const newFile = {
+                    name: file.name,
+                    size: (file.size / 1024).toFixed(2) + ' KB',
+                    type: file.type,
+                    content: reader.result,
+                    uploadedAt: new Date().toISOString()
+                };
+
+                const users = JSON.parse(localStorage.getItem('users'));
+                const user = users.find(u => u.username === this.currentUser.username);
+                user.files.push(newFile);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                this.showUploadProgress(false);
+                this.showNotification('تم رفع الملف بنجاح', 'success');
+                this.renderFiles();
+            };
+            reader.readAsDataURL(file);
+        }, 1500);
+    },
+
+    showUploadProgress(show) {
+        const progressBar = document.querySelector('.progress-bar');
+        progressBar.style.display = show ? 'block' : 'none';
+        if (show) {
+            let width = 0;
+            const interval = setInterval(() => {
+                width += 10;
+                document.querySelector('.progress-fill').style.width = `${width}%`;
+                if (width >= 100) clearInterval(interval);
+            }, 150);
+        }
+    },
+
+    renderFiles() {
+        const fileGrid = document.getElementById('fileGrid');
+        fileGrid.innerHTML = '';
+
+        this.currentUser.files.forEach((file, index) => {
+            const fileCard = document.createElement('div');
+            fileCard.className = 'file-card';
+            fileCard.innerHTML = `
+                <div class="file-actions">
+                    <button class="action-btn button-primary" onclick="App.deleteFile(${index})">🗑</button>
+                    <button class="action-btn button-primary" onclick="App.renameFile(${index})">✏️</button>
+                </div>
+                <div class="file-icon">📄</div>
+                <h3>${file.name}</h3>
+                <p>${file.size}</p>
+                <a href="${file.content}" download class="button button-primary">تحميل</a>
+            `;
+            fileGrid.appendChild(fileCard);
+        });
+    },
+
+    deleteFile(index) {
+        const users = JSON.parse(localStorage.getItem('users'));
+        const user = users.find(u => u.username === this.currentUser.username);
+        user.files.splice(index, 1);
+        localStorage.setItem('users', JSON.stringify(users));
+        this.renderFiles();
+        this.showNotification('تم حذف الملف', 'success');
+    },
+
+    renameFile(index) {
+        const newName = prompt('أدخل الاسم الجديد:');
+        if (newName) {
+            const users = JSON.parse(localStorage.getItem('users'));
+            const user = users.find(u => u.username === this.currentUser.username);
+            user.files[index].name = newName;
+            localStorage.setItem('users', JSON.stringify(users));
+            this.renderFiles();
+            this.showNotification('تم تغيير الاسم', 'success');
+        }
+    },
+
+    // وظائف المساعدة
+    checkAuth() {
+        const storedUser = localStorage.getItem('currentUser');
+        if (storedUser) {
+            this.currentUser = JSON.parse(storedUser);
+            this.showFileSection();
+        }
+    },
+
+    showFileSection() {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('fileSection').style.display = 'block';
+        document.getElementById('welcomeMessage').textContent = `مرحبًا ${this.currentUser.username}`;
+        this.renderFiles();
+    },
+
+    showSignup() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('signupForm').style.display = 'block';
+    },
+
+    showLogin() {
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    }
+};
+
+// بدء التطبيق
+App.init();
+</script>
+</body>
+</html>
